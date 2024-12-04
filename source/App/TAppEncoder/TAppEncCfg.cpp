@@ -779,6 +779,8 @@ Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
   ("InputPathPrefix,-ipp",                            inputPathPrefix,                             string(""), "pathname to prepend to input filename")
   ("BitstreamFile,b",                                 m_bitstreamFileName,                         string(""), "Bitstream output file name")
   ("ReconFile,o",                                     m_reconFileName,                             string(""), "Reconstructed YUV output file name")
+  ("TextureThreshold", m_textureThreshold, Double(5.0), "Threshold for texture complexity (default: 5.0)")
+  ("MaxHomogeneousDepth", m_maxHomogeneousDepth, UInt(3), "Maximum depth for homogeneous regions (default: 3)")
 #if SHUTTER_INTERVAL_SEI_PROCESSING
   ("SEIShutterIntervalPreFilename,-sii",              m_shutterIntervalPreFileName,                string(""), "File name of Pre-Filtering video. If empty, not output video\n")
 #endif

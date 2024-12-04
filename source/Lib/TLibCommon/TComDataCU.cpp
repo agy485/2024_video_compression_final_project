@@ -510,6 +510,9 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
   {
     m_pCtuAboveRight = pcPic->getCtu( m_ctuRsAddr - frameWidthInCtus + 1 );
   }
+
+  // 初始化紋理均勻性屬性
+  m_isHomogeneous = false;
 }
 
 

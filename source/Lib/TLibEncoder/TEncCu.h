@@ -107,6 +107,9 @@ private:
   TEncSbac*               m_pcRDGoOnSbacCoder;
   TEncRateCtrl*           m_pcRateCtrl;
 
+  double m_textureThreshold; // 紋理均勻閾值
+  UInt m_maxHomogeneousDepth; // 最大分割深度
+
 public:
   /// copy parameters from encoder class
   Void  init                ( TEncTop* pcEncTop );

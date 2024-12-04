@@ -454,4 +454,30 @@ Void TComYuv::removeHighFreq( const TComYuv* pcYuvSrc,
   }
 }
 
+double TComYuv::calculateMAD(Pel* pLuma, UInt width, UInt height, UInt stride) {
+    double mean = 0.0;
+    double mad = 0.0;
+
+    // 計算像素平均值
+    for (UInt y = 0; y < height; ++y) {
+        for (UInt x = 0; x < width; ++x) {
+            mean += pLuma[x];
+        }
+        pLuma += stride;
+    }
+    mean /= (width * height);
+
+    // 計算絕對偏差
+    pLuma -= height * stride;  // 重置指標
+    for (UInt y = 0; y < height; ++y) {
+        for (UInt x = 0; x < width; ++x) {
+            mad += fabs(pLuma[x] - mean);
+        }
+        pLuma += stride;
+    }
+    mad /= (width * height);
+
+    return mad;
+}
+
 //! \}
