@@ -65,6 +65,8 @@ class TEncSlice;
 class TEncCu
 {
 private:
+  double m_textureThreshold; // 紋理均勻閾值
+  UInt m_maxHomogeneousDepth; // 最大分割深度
 
   TComDataCU**            m_ppcBestCU;      ///< Best CUs in each depth
   TComDataCU**            m_ppcTempCU;      ///< Temporary CUs in each depth
@@ -106,9 +108,6 @@ private:
   TEncSbac***             m_pppcRDSbacCoder;
   TEncSbac*               m_pcRDGoOnSbacCoder;
   TEncRateCtrl*           m_pcRateCtrl;
-
-  double m_textureThreshold; // 紋理均勻閾值
-  UInt m_maxHomogeneousDepth; // 最大分割深度
 
 public:
   /// copy parameters from encoder class

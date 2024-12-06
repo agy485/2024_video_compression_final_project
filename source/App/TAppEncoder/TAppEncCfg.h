@@ -70,6 +70,10 @@ public:
   };
 
 protected:
+
+  Double m_textureThreshold;        // 用於紋理複雜度的閾值
+  UInt m_maxHomogeneousDepth;       // 用於均勻區域的最大深度
+
   // file I/O
   std::string m_inputFileName;                                ///< source file name
   std::string m_bitstreamFileName;                            ///< output bitstream file

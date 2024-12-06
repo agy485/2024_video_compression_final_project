@@ -65,6 +65,8 @@ class TComDataCU
 {
 private:
 
+  Bool m_isHomogeneous; // CU 是否為紋理均勻
+
   // -------------------------------------------------------------------------------------------------------------------
   // class pointers
   // -------------------------------------------------------------------------------------------------------------------
@@ -153,8 +155,6 @@ private:
   SChar         m_codedQP;
   UChar*        m_explicitRdpcmMode[MAX_NUM_COMPONENT]; ///< Stores the explicit RDPCM mode for all TUs belonging to this CU
 
-  Bool m_isHomogeneous; // CU 是否為紋理均勻
-
 protected:
 
   /// adds a single possible motion vector predictor candidate
@@ -172,6 +172,9 @@ protected:
 public:
                 TComDataCU();
   virtual       ~TComDataCU();
+
+  void setHomogeneous(Bool isHomogeneous) { m_isHomogeneous = isHomogeneous; }
+  Bool isHomogeneous() const { return m_isHomogeneous; }
 
   // -------------------------------------------------------------------------------------------------------------------
   // create / destroy / initialize / copy
@@ -570,8 +573,6 @@ namespace RasterAddress
     return addr < val * numUnitsPerRow;
   }
 
-  void setHomogeneous(Bool isHomogeneous) { m_isHomogeneous = isHomogeneous; }
-  Bool isHomogeneous() const { return m_isHomogeneous; }
 }
 
 //! \}

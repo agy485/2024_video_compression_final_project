@@ -422,6 +422,8 @@ Bool TComDataCU::isLastSubCUOfCtu(const UInt absPartIdx) const
 Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
 {
 
+  // 初始化紋理均勻性屬性
+  m_isHomogeneous = false;
   const UInt maxCUWidth = pcPic->getPicSym()->getSPS().getMaxCUWidth();
   const UInt maxCUHeight= pcPic->getPicSym()->getSPS().getMaxCUHeight();
   m_pcPic              = pcPic;
@@ -511,8 +513,6 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
     m_pCtuAboveRight = pcPic->getCtu( m_ctuRsAddr - frameWidthInCtus + 1 );
   }
 
-  // 初始化紋理均勻性屬性
-  m_isHomogeneous = false;
 }
 
 

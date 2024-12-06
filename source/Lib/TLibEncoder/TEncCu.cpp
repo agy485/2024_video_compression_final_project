@@ -544,25 +544,26 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
   const UInt uiTPelY   = rpcBestCU->getCUPelY();
   const UInt uiBPelY   = uiTPelY + rpcBestCU->getHeight(0) - 1;
   const UInt uiWidth   = rpcBestCU->getWidth(0);
+  const UInt uiHeight = rpcBestCU->getHeight(0);
 
   // 提取亮度 (Luma) 數據
   Pel* pLuma = m_ppcOrigYuv[uiDepth]->getAddr(COMPONENT_Y);
   UInt stride = m_ppcOrigYuv[uiDepth]->getStride(COMPONENT_Y);
 
-  // 計算紋理均勻性 (MAD)
-  double mad = m_pcPredSearch->getYuvPred()->calculateMAD(pLuma, uiWidth, uiHeight, stride);
+  TComYuv yuvInstance;
+  double mad = yuvInstance.calculateMAD(pLuma, uiWidth, uiHeight, stride);
 
   // 判斷是否均勻
   Bool isHomogeneous = (mad < m_textureThreshold); // 閾值可通過配置文件設定
   rpcTempCU->setHomogeneous(isHomogeneous);
 
   // 如果紋理均勻並且達到最大分割深度，則跳過分割流程
-  if (isHomogeneous && uiDepth >= m_maxHomogeneousDepth)
+  if (mad < m_textureThreshold)
   {
-      // 設置當前 CU 的最佳結果
-      rpcBestCU->copyFrom(rpcTempCU);
+      rpcBestCU->copyPartFrom(rpcTempCU, 0, rpcTempCU->getDepth(0)); 
       return; // 提前結束
   }
+
 
   Int iBaseQP = xComputeQP( rpcBestCU, uiDepth );
   Int iMinQP;
