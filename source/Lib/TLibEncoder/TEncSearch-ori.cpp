@@ -34,9 +34,7 @@
 /** \file     TEncSearch.cpp
  \brief    encoder search class
  */
-#include <exception>
-#include <iostream>
-#include <stdexcept>
+
 #include "TLibCommon/CommonDef.h"
 #include "TLibCommon/TComRom.h"
 #include "TLibCommon/TComMotionInfo.h"
@@ -609,6 +607,9 @@ __inline Void TEncSearch::xTZ8PointSquareSearch( const TComPattern* const pcPatt
   } // check bottom
 }
 
+
+
+
 __inline Void TEncSearch::xTZ8PointDiamondSearch( const TComPattern*const  pcPatternKey,
                                                   IntTZSearchStruct& rcStruct,
                                                   const TComMv*const  pcMvSrchRngLT,
@@ -818,227 +819,6 @@ __inline Void TEncSearch::xTZ8PointDiamondSearch( const TComPattern*const  pcPat
     } // iDist <= 8
   } // iDist == 1
 }
-
-__inline Void TEncSearch::xTZ6PointHexagonSearch( const TComPattern*const  pcPatternKey,
-                                                  IntTZSearchStruct& rcStruct,
-                                                  const TComMv*const  pcMvSrchRngLT,
-                                                  const TComMv*const  pcMvSrchRngRB,
-                                                  const Int iStartX,
-                                                  const Int iStartY,
-                                                  const Int iDist,
-                                                  const Bool bCheckCornersAtDist1 )
-{
-  const Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
-  const Int   iSrchRngHorRight  = pcMvSrchRngRB->getHor();
-  const Int   iSrchRngVerTop    = pcMvSrchRngLT->getVer();
-  const Int   iSrchRngVerBottom = pcMvSrchRngRB->getVer();
-
-  // 8 point search,                   //   1 2 3
-  // search around the start point     //   4 0 5
-  // with the required  distance       //   6 7 8
-  assert ( iDist != 0 );
-  const Int iTop        = iStartY - iDist;
-  const Int iBottom     = iStartY + iDist;
-  const Int iLeft       = iStartX - iDist;
-  const Int iRight      = iStartX + iDist;
-  rcStruct.uiBestRound += 1;
-
-  if ( iDist == 1 )
-  {
-    if ( iTop >= iSrchRngVerTop ) // check top
-    {
-      if (bCheckCornersAtDist1)
-      {
-        if ( iLeft >= iSrchRngHorLeft) // check top-left
-        {
-          xTZSearchHelp( pcPatternKey, rcStruct, iLeft, iTop, 1, iDist );
-        }
-        xTZSearchHelp( pcPatternKey, rcStruct, iStartX, iTop, 2, iDist );
-        if ( iRight <= iSrchRngHorRight ) // check middle right
-        {
-          xTZSearchHelp( pcPatternKey, rcStruct, iRight, iTop, 3, iDist );
-        }
-      }
-      else
-      {
-        xTZSearchHelp( pcPatternKey, rcStruct, iStartX, iTop, 2, iDist );
-      }
-    }
-    if ( iLeft >= iSrchRngHorLeft ) // check middle left
-    {
-      xTZSearchHelp( pcPatternKey, rcStruct, iLeft, iStartY, 4, iDist );
-    }
-    if ( iRight <= iSrchRngHorRight ) // check middle right
-    {
-      xTZSearchHelp( pcPatternKey, rcStruct, iRight, iStartY, 5, iDist );
-    }
-    if ( iBottom <= iSrchRngVerBottom ) // check bottom
-    {
-      if (bCheckCornersAtDist1)
-      {
-        if ( iLeft >= iSrchRngHorLeft) // check top-left
-        {
-          xTZSearchHelp( pcPatternKey, rcStruct, iLeft, iBottom, 6, iDist );
-        }
-        xTZSearchHelp( pcPatternKey, rcStruct, iStartX, iBottom, 7, iDist );
-        if ( iRight <= iSrchRngHorRight ) // check middle right
-        {
-          xTZSearchHelp( pcPatternKey, rcStruct, iRight, iBottom, 8, iDist );
-        }
-      }
-      else
-      {
-        xTZSearchHelp( pcPatternKey, rcStruct, iStartX, iBottom, 7, iDist );
-      }
-    }
-  }
-  else
-  {
-    if ( iDist <= 8 )
-    {
-      // const Int iTop_2      = iStartY - (iDist>>1);
-      // const Int iBottom_2   = iStartY + (iDist>>1);
-      const Int iLeft_2     = iStartX - (iDist>>1);
-      const Int iRight_2    = iStartX + (iDist>>1);
-
-      if (  iTop >= iSrchRngVerTop && iLeft >= iSrchRngHorLeft &&
-          iRight <= iSrchRngHorRight && iBottom <= iSrchRngVerBottom ) // check border
-      {
-        xTZSearchHelp( pcPatternKey, rcStruct, iLeft_2,      iTop,      1, iDist);
-        xTZSearchHelp( pcPatternKey, rcStruct, iRight_2,     iTop,      3, iDist);
-        xTZSearchHelp( pcPatternKey, rcStruct, iLeft,     iStartY,      6, iDist);
-        xTZSearchHelp( pcPatternKey, rcStruct, iRight,    iStartY,      8, iDist);
-        xTZSearchHelp( pcPatternKey, rcStruct, iLeft_2,   iBottom,      9, iDist);
-        xTZSearchHelp( pcPatternKey, rcStruct, iRight_2,  iBottom,     10, iDist);
-      }
-      else // check border
-      {
-        if ( iTop >= iSrchRngVerTop ) // check top
-        {
-          if ( iLeft_2 >= iSrchRngHorLeft ) // check half left
-          {
-            xTZSearchHelp( pcPatternKey, rcStruct, iLeft_2, iTop, 1, iDist);
-          }
-          if ( iRight_2 <= iSrchRngHorRight ) // check half right
-          {
-            xTZSearchHelp( pcPatternKey, rcStruct, iRight_2, iTop, 3, iDist);
-          }
-        }
-        
-        if ( iLeft >= iSrchRngHorLeft ) // check left
-        {
-          xTZSearchHelp( pcPatternKey, rcStruct, iLeft, iStartY, 6, iDist);
-        }
-        if ( iRight <= iSrchRngHorRight ) // check right
-        {
-          xTZSearchHelp( pcPatternKey, rcStruct, iRight, iStartY, 8, iDist);
-        }
-
-        if ( iBottom <= iSrchRngVerBottom ) // check half bottom
-        {
-          if ( iLeft_2 >= iSrchRngHorLeft ) // check half left
-          {
-            xTZSearchHelp( pcPatternKey, rcStruct, iLeft_2, iBottom, 9, iDist);
-          }
-          if ( iRight_2 <= iSrchRngHorRight ) // check half right
-          {
-            xTZSearchHelp( pcPatternKey, rcStruct, iRight_2, iBottom, 10, iDist);
-          }
-        } 
-        
-      } // check border
-    }
-
-    else // iDist > 8 
-    {
-      const Int iLeft_2       = iStartX - (iDist >> 1);
-      const Int iRight_2      = iStartX + (iDist >> 1);
-      //throw std::runtime_error("Fuck");
-      if ( iTop >= iSrchRngVerTop && iLeft >= iSrchRngHorLeft &&
-          iRight <= iSrchRngHorRight && iBottom <= iSrchRngVerBottom ) // check border
-      {
-        xTZSearchHelp( pcPatternKey, rcStruct, iLeft_2, iTop,    0, iDist ); // 1
-        xTZSearchHelp( pcPatternKey, rcStruct, iRight_2, iTop,    0, iDist ); // 3
-        xTZSearchHelp( pcPatternKey, rcStruct, iLeft,   iStartY, 0, iDist ); // 6
-        xTZSearchHelp( pcPatternKey, rcStruct, iRight,  iStartY, 0, iDist ); // 8
-        xTZSearchHelp( pcPatternKey, rcStruct, iLeft_2, iBottom, 0, iDist ); // 9
-        xTZSearchHelp( pcPatternKey, rcStruct, iRight_2, iBottom, 0, iDist ); // 10
-        for ( Int index = 1; index < 4; index++ )
-        {
-          const Int iPosYT = iTop    + ((iDist>>2) * index);
-          const Int iPosYB = iBottom - ((iDist>>2) * index);
-          const Int iPosXL = iLeft_2 - ((iDist>>2) * index);
-          const Int iPosXR = iRight_2 + ((iDist>>2) * index);
-          xTZSearchHelp( pcPatternKey, rcStruct, iPosXL, iPosYT, 0, iDist );
-          xTZSearchHelp( pcPatternKey, rcStruct, iPosXR, iPosYT, 0, iDist );
-          xTZSearchHelp( pcPatternKey, rcStruct, iPosXL, iPosYB, 0, iDist );
-          xTZSearchHelp( pcPatternKey, rcStruct, iPosXR, iPosYB, 0, iDist );
-        }
-      }
-      else // check border
-      {
-        if ( iTop >= iSrchRngVerTop ) // check top
-        {
-          if (iLeft_2 >= iSrchRngHorLeft){
-            xTZSearchHelp( pcPatternKey, rcStruct, iLeft_2, iTop,    0, iDist );
-          }
-          if (iRight_2 >= iSrchRngHorLeft){
-            xTZSearchHelp( pcPatternKey, rcStruct, iRight_2, iTop,    0, iDist );
-          }
-        }
-        if ( iLeft >= iSrchRngHorLeft ) // check left
-        {
-          xTZSearchHelp( pcPatternKey, rcStruct, iLeft, iStartY, 0, iDist );
-        }
-        if ( iRight <= iSrchRngHorRight ) // check right
-        {
-          xTZSearchHelp( pcPatternKey, rcStruct, iRight, iStartY, 0, iDist );
-        }
-        if ( iBottom <= iSrchRngVerBottom ) // check bottom
-        {
-          if (iLeft_2 >= iSrchRngHorLeft){
-            xTZSearchHelp( pcPatternKey, rcStruct, iLeft_2, iBottom,    0, iDist );
-          }
-          if (iRight_2 >= iSrchRngHorLeft){
-            xTZSearchHelp( pcPatternKey, rcStruct, iRight_2, iBottom,    0, iDist );
-          }
-        }
-        for ( Int index = 1; index < 4; index++ )
-        {
-          const Int iPosYT = iTop    + ((iDist>>2) * index);
-          const Int iPosYB = iBottom - ((iDist>>2) * index);
-          const Int iPosXL = iLeft_2 - ((iDist>>2) * index);
-          const Int iPosXR = iRight_2 + ((iDist>>2) * index);
-
-          if ( iPosYT >= iSrchRngVerTop ) // check top
-          {
-            if ( iPosXL >= iSrchRngHorLeft ) // check left
-            {
-              xTZSearchHelp( pcPatternKey, rcStruct, iPosXL, iPosYT, 0, iDist );
-            }
-            if ( iPosXR <= iSrchRngHorRight ) // check right
-            {
-              xTZSearchHelp( pcPatternKey, rcStruct, iPosXR, iPosYT, 0, iDist );
-            }
-          } // check top
-          if ( iPosYB <= iSrchRngVerBottom ) // check bottom
-          {
-            if ( iPosXL >= iSrchRngHorLeft ) // check left
-            {
-              xTZSearchHelp( pcPatternKey, rcStruct, iPosXL, iPosYB, 0, iDist );
-            }
-            if ( iPosXR <= iSrchRngHorRight ) // check right
-            {
-              xTZSearchHelp( pcPatternKey, rcStruct, iPosXR, iPosYB, 0, iDist );
-            }
-          } // check bottom
-        } // for ...
-      } // check border
-       
-    } // iDist <= 8
-  } // iDist == 1
-}
-
 
 Distortion TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
                                            TComMv baseRefMv,
@@ -4299,7 +4079,7 @@ Void TEncSearch::xTZSearch( const TComDataCU* const pcCU,
   const UInt uiStarRefinementRounds                  = 2;  // star refinement stop X rounds after best match (must be >=1)
   const Bool bNewZeroNeighbourhoodTest               = bExtendedSettings;
 
-  UInt uiSearchRange = m_iSearchRange; // 8
+  UInt uiSearchRange = 8;//m_iSearchRange;
   pcCU->clipMv( rcMv );
 #if ME_ENABLE_ROUNDING_OF_MVS
   rcMv.divideByPowerOf2(2);
@@ -4400,11 +4180,10 @@ Void TEncSearch::xTZSearch( const TComDataCU* const pcCU,
   {
     if ( bFirstSearchDiamond == 1 )
     {
-      xTZ6PointHexagonSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist, bFirstCornersForDiamondDist1 );
+      xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist, bFirstCornersForDiamondDist1 );
     }
     else
     {
-      throw std::runtime_error("test");
       xTZ8PointSquareSearch  ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist );
     }
 
@@ -4425,7 +4204,7 @@ Void TEncSearch::xTZSearch( const TComDataCU* const pcCU,
         // test its neighborhood
         for ( iDist = 1; iDist <= (Int)uiSearchRange; iDist*=2 )
         {
-          xTZ6PointHexagonSearch( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, 0, 0, iDist, false );
+          xTZ8PointDiamondSearch( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, 0, 0, iDist, false );
           if ( bTestZeroVectorStop && (cStruct.uiBestRound > 0) ) // stop criterion
           {
             break;
@@ -4444,7 +4223,7 @@ Void TEncSearch::xTZSearch( const TComDataCU* const pcCU,
     {
       for ( iDist = 1; iDist <= ((Int)uiSearchRange >> 1); iDist*=2 )
       {
-        xTZ6PointHexagonSearch( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, 0, 0, iDist, false );
+        xTZ8PointDiamondSearch( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, 0, 0, iDist, false );
         if ( bTestZeroVectorStop && (cStruct.uiBestRound > 2) ) // stop criterion
         {
           break;
@@ -4514,11 +4293,10 @@ Void TEncSearch::xTZSearch( const TComDataCU* const pcCU,
         iDist = cStruct.uiBestDistance >>= 1;
         if ( bRasterRefinementDiamond == 1 )
         {
-          xTZ6PointHexagonSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist, bRasterRefinementCornersForDiamondDist1 );
+          xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist, bRasterRefinementCornersForDiamondDist1 );
         }
         else
         {
-          throw std::runtime_error("test");
           xTZ8PointSquareSearch  ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist );
         }
       }
@@ -4548,11 +4326,10 @@ Void TEncSearch::xTZSearch( const TComDataCU* const pcCU,
       {
         if ( bStarRefinementDiamond == 1 )
         {
-          xTZ6PointHexagonSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist, bStarRefinementCornersForDiamondDist1 );
+          xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist, bStarRefinementCornersForDiamondDist1 );
         }
         else
         {
-          throw std::runtime_error("test");
           xTZ8PointSquareSearch  ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist );
         }
         if ( bStarRefinementStop && (cStruct.uiBestRound >= uiStarRefinementRounds) ) // stop criterion
