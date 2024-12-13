@@ -205,6 +205,7 @@ Void TEncCu::destroy()
  */
 Void TEncCu::init( TEncTop* pcEncTop )
 {
+  m_textureThreshold = 10.0;
   m_pcEncCfg           = pcEncTop;
   m_pcPredSearch       = pcEncTop->getPredSearch();
   m_pcTrQuant          = pcEncTop->getTrQuant();
@@ -554,15 +555,20 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
   double mad = yuvInstance.calculateMAD(pLuma, uiWidth, uiHeight, stride);
 
   // 判斷是否均勻
+  // m_textureThreshold = 10.0;
   Bool isHomogeneous = (mad < m_textureThreshold); // 閾值可通過配置文件設定
   rpcTempCU->setHomogeneous(isHomogeneous);
 
-  // 如果紋理均勻並且達到最大分割深度，則跳過分割流程
-  if (mad < m_textureThreshold)
-  {
-      rpcBestCU->copyPartFrom(rpcTempCU, 0, rpcTempCU->getDepth(0)); 
-      return; // 提前結束
-  }
+  // // 如果紋理均勻並且達到最大分割深度，則跳過分割流程
+  // // printf("thre: %f : %f\n", m_textureThreshold, mad);
+  // if (mad < m_textureThreshold)
+  // {
+  //     // printf("%f\n",mad);
+  //     // rpcBestCU->copyPartFrom(rpcTempCU, 0, rpcTempCU->getDepth(0)); 
+  //     rpcBestCU->copyToPic(uiDepth);                                                     // Copy Best data to Picture for next partition prediction.
+  //     xCopyYuv2Pic( rpcBestCU->getPic(), rpcBestCU->getCtuRsAddr(), rpcBestCU->getZorderIdxInCtu(), uiDepth, uiDepth );   // Copy Yuv data to picture Yuv
+  //     return; // 提前結束
+  // }
 
 
   Int iBaseQP = xComputeQP( rpcBestCU, uiDepth );
@@ -1019,7 +1025,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
     iMaxQP = iMinQP; // If all TUs are forced into using transquant bypass, do not loop here.
   }
 
-  const Bool bSubBranch = bBoundary || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) );
+  const Bool bSubBranch = bBoundary || !isHomogeneous || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) );
 
   if( bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary))
   {
