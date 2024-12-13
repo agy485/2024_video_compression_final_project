@@ -512,6 +512,85 @@ Void TEncCu::deriveTestModeAMP (TComDataCU *pcBestCU, PartSize eParentPartSize, 
 }
 #endif
 
+Double TEncCu::getOptimalDepthLevel(TComDataCU *pcCU, UInt uiDepth)
+{
+    // 權重設定 (根據論文描述)
+    const double wTop      = 0.3;
+    const double wLeft     = 0.3;
+    const double wTopLeft  = 0.2;
+    const double wTopRight = 0.2;
+
+    double sumWeightedDepth = 0.0;
+    double sumWeights       = 0.0;
+
+    // 假設使用 0 作為參考的 partition index (視實際情況可能需調整)
+    UInt uiCurrPartIdx = 0;  
+
+    // 取得上方 CU 深度 (getPUAbove)
+    {
+        UInt uiTopPartIdx = 0;
+        // 根據您提供的函式原型：
+        // const TComDataCU *getPUAbove(UInt &uiAPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool planarAtCTUBoundary=false, Bool bEnforceTileRestriction=true) const;
+        const TComDataCU* pcTopCU = pcCU->getPUAbove(uiTopPartIdx, uiCurrPartIdx, true, false, true);
+        if (pcTopCU != NULL)
+        {
+            UChar ucTopDepth = pcTopCU->getDepth(uiTopPartIdx);
+            sumWeightedDepth += (ucTopDepth * wTop);
+            sumWeights       += wTop;
+        }
+    }
+
+    // 取得左方 CU 深度 (getPULeft)
+    {
+        UInt uiLeftPartIdx = 0;
+        // const TComDataCU *getPULeft(UInt &uiLPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceTileRestriction=true) const;
+        const TComDataCU* pcLeftCU = pcCU->getPULeft(uiLeftPartIdx, uiCurrPartIdx, true, true);
+        if (pcLeftCU != NULL)
+        {
+            UChar ucLeftDepth = pcLeftCU->getDepth(uiLeftPartIdx);
+            sumWeightedDepth += (ucLeftDepth * wLeft);
+            sumWeights       += wLeft;
+        }
+    }
+
+    // 取得左上方 CU 深度 (getPUAboveLeft)
+    {
+        UInt uiTopLeftPartIdx = 0;
+        // const TComDataCU *getPUAboveLeft(UInt &uiALPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true) const;
+        const TComDataCU* pcTopLeftCU = pcCU->getPUAboveLeft(uiTopLeftPartIdx, uiCurrPartIdx, true);
+        if (pcTopLeftCU != NULL)
+        {
+            UChar ucTopLeftDepth = pcTopLeftCU->getDepth(uiTopLeftPartIdx);
+            sumWeightedDepth += (ucTopLeftDepth * wTopLeft);
+            sumWeights       += wTopLeft;
+        }
+    }
+
+    // 取得右上方 CU 深度 (getPUAboveRight)
+    {
+        UInt uiTopRightPartIdx = 0;
+        // const TComDataCU *getPUAboveRight(UInt &uiARPartUnitIdx, UInt uiCurrPartUnitIdx, UInt uiPartUnitOffset=1U, Bool bEnforceSliceRestriction=true, Bool bEnforceTileRestriction=true) const;
+        // uiPartUnitOffset 預設為 1U，若您不需更改可直接使用 1
+        const TComDataCU* pcTopRightCU = pcCU->getPUAboveRight(uiTopRightPartIdx, uiCurrPartIdx, 1, true);
+        if (pcTopRightCU != NULL)
+        {
+            UChar ucTopRightDepth = pcTopRightCU->getDepth(uiTopRightPartIdx);
+            sumWeightedDepth += (ucTopRightDepth * wTopRight);
+            sumWeights       += wTopRight;
+        }
+    }
+
+    // 若無法取得任何鄰居，則回傳當前深度
+    if (sumWeights == 0.0)
+    {
+        return (double)uiDepth;
+    }
+
+    // 計算加權平均深度
+    double avgDepth = sumWeightedDepth / sumWeights;
+
+    return avgDepth;
+}
 
 // ====================================================================================================================
 // Protected member functions
@@ -558,6 +637,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
   // m_textureThreshold = 10.0;
   Bool isHomogeneous = (mad < m_textureThreshold); // 閾值可通過配置文件設定
   rpcTempCU->setHomogeneous(isHomogeneous);
+  Bool isBSIP = false;
 
   // // 如果紋理均勻並且達到最大分割深度，則跳過分割流程
   // // printf("thre: %f : %f\n", m_textureThreshold, mad);
@@ -917,28 +997,38 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
              ((!m_pcEncCfg->getDisableIntraPUsInInterSlices()) && (
              (rpcBestCU->getCbf(0, COMPONENT_Y) != 0) ||
              ((rpcBestCU->getCbf(0, COMPONENT_Cb) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
-             ((rpcBestCU->getCbf(0, COMPONENT_Cr) != 0) && (numberValidComponents > COMPONENT_Cr))  // avoid very complex intra if it is unlikely
+             ((rpcBestCU->getCbf(0, COMPONENT_Cr) != 0) && (numberValidComponents > COMPONENT_Cr))  
             )))
         {
+            if (!isHomogeneous) {
+                Double predictedODL = getOptimalDepthLevel(rpcTempCU, uiDepth);
+                // printf("pred: %f, dep %d\n", predictedODL, uiDepth);
+                if (predictedODL > double(uiDepth) + 1) {
+                    // printf("hihi\n");
+                    isBSIP = true;
+                }
+            }
 #else
-        if((rpcBestCU->getSlice()->getSliceType() == I_SLICE)                                        ||
-            ((!m_pcEncCfg->getDisableIntraPUsInInterSlices()) && (
-              (rpcBestCU->getCbf( 0, COMPONENT_Y  ) != 0)                                            ||
-             ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
-             ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr))  // avoid very complex intra if it is unlikely
-            )))
+        if((rpcBestCU->getSlice()->getSliceType() == I_SLICE) ||
+           ((!m_pcEncCfg->getDisableIntraPUsInInterSlices()) && (
+           (rpcBestCU->getCbf(0, COMPONENT_Y) != 0) ||
+           ((rpcBestCU->getCbf(0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
+           ((rpcBestCU->getCbf(0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr))
+        )))
         {
 #endif 
-          xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
-          rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-          if( uiDepth == sps.getLog2DiffMaxMinCodingBlockSize() )
-          {
-            if( rpcTempCU->getWidth(0) > ( 1 << sps.getQuadtreeTULog2MinSize() ) )
-            {
-              xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug)   );
-              rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+            if (!isBSIP) {
+                xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
+                rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+                if( uiDepth == sps.getLog2DiffMaxMinCodingBlockSize() )
+                {
+                    if( rpcTempCU->getWidth(0) > ( 1 << sps.getQuadtreeTULog2MinSize() ) )
+                    {
+                        xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug) );
+                        rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+                    }
+                }
             }
-          }
         }
 
         // test PCM

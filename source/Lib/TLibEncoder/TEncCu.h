@@ -113,6 +113,7 @@ public:
   /// copy parameters from encoder class
   Void  init                ( TEncTop* pcEncTop );
 
+  Double getOptimalDepthLevel(TComDataCU *pcCU, UInt uiDepth);
   Void       setSliceEncoder( TEncSlice* pSliceEncoder ) { m_pcSliceEncoder = pSliceEncoder; }
   TEncSlice* getSliceEncoder() { return m_pcSliceEncoder; }
   Void       initLumaDeltaQpLUT();
