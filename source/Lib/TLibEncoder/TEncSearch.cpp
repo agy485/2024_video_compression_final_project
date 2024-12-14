@@ -4737,7 +4737,7 @@ Void TEncSearch::xTZHexSearch( const TComDataCU* const pcCU,
     }
     else
     {
-      throw std::runtime_error("test");
+      // throw std::runtime_error("test");
       xTZ8PointSquareSearch  ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist );
     }
 
@@ -4885,7 +4885,7 @@ Void TEncSearch::xTZHexSearch( const TComDataCU* const pcCU,
         }
         else
         {
-          throw std::runtime_error("test");
+          // throw std::runtime_error("test");
           xTZ8PointSquareSearch  ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist );
         }
         if ( bStarRefinementStop && (cStruct.uiBestRound >= uiStarRefinementRounds) ) // stop criterion
