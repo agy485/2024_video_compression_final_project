@@ -134,3 +134,26 @@ Install the needed toolchains:
 pacman -S --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain git subversion mingw-w64-i686-cmake mingw-w64-x86_64-cmake
 ```
 
+Change Motion Search Flag
+-------------------------------
+Change the flag in cfg file to use different MS algorithm.
+```bash
+FastSearch                    : 4         
+# enum MESearchMethod
+# {
+#   MESEARCH_FULL              = 0,
+#   MESEARCH_DIAMOND           = 1,
+#   MESEARCH_SELECTIVE         = 2,
+#   MESEARCH_DIAMOND_ENHANCED  = 3,
+#   MESEARCH_HEXAGON           = 4,
+#   MESEARCH_HEXAGON_ENHANCED  = 5,
+#   MESEARCH_HEXAGON_CROSS     = 6,
+#   MESEARCH_DIAMOND_CROSS     = 7,
+# };
+```
+If you encounter some warnings  in TAppEncCfg when compiling code, please ignore it.
+
+Videos
+-------------------------------
+V1.mp4 : F1.mp4,
+V2.mp4 : 10月.mp4

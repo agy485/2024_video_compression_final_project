@@ -512,7 +512,6 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
   {
     m_pCtuAboveRight = pcPic->getCtu( m_ctuRsAddr - frameWidthInCtus + 1 );
   }
-
 }
 
 
