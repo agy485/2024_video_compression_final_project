@@ -204,6 +204,8 @@ public:
   UInt         getComponentScaleX         (const ComponentID id) const { return ::getComponentScaleX(id, m_chromaFormatIDC); }
   UInt         getComponentScaleY         (const ComponentID id) const { return ::getComponentScaleY(id, m_chromaFormatIDC); }
 
+  double calculateMAD(Pel* pLuma, UInt width, UInt height, UInt stride);
+
 };// END CLASS DEFINITION TComYuv
 
 //! \}
