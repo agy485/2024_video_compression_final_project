@@ -638,6 +638,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
   Bool isHomogeneous = (mad < m_textureThreshold); // 閾值可通過配置文件設定
   rpcTempCU->setHomogeneous(isHomogeneous);
   Bool isBSIP = false;
+  Bool isCBFZero = false;
 
   // // 如果紋理均勻並且達到最大分割深度，則跳過分割流程
   // // printf("thre: %f : %f\n", m_textureThreshold, mad);
@@ -1028,6 +1029,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
                         rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
                     }
                 }
+                // printf("!isBSIP\n");
+                if (rpcTempCU->getQtRootCbf(0) == 0)
+                {
+                    // printf("isCBFZero\n");
+                    isCBFZero = true;
+                }
             }
         }
 
@@ -1115,9 +1122,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
     iMaxQP = iMinQP; // If all TUs are forced into using transquant bypass, do not loop here.
   }
 
-  const Bool bSubBranch = bBoundary || !isHomogeneous || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) );
+  const Bool bSubBranch = bBoundary || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) );
 
-  if( bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary))
+  if( bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && !isHomogeneous && !isCBFZero && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary))
   {
     // further split
     Double splitTotalCost = 0;
