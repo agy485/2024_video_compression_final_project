@@ -257,6 +257,7 @@ Void TEncCu::compressCtu( TComDataCU* pCtu )
     }
   }
 #endif
+  // printf("pctu %d\n", pCtu->getPartitionSize(0));
 }
 /** \param  pCtu  pointer of CU data class
  */
@@ -552,11 +553,13 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
   UInt stride = m_ppcOrigYuv[uiDepth]->getStride(COMPONENT_Y);
 
   TComYuv yuvInstance;
-  double mad = yuvInstance.calculateMAD(pLuma, uiWidth, uiHeight, stride);
 
-  // 判斷是否均勻
-  // m_textureThreshold = 10.0;
-  Bool isHomogeneous = (mad < m_textureThreshold); // 閾值可通過配置文件設定
+  Bool isHomogeneous = false;
+  if (uiDepth != 0) {
+    double mad = yuvInstance.calculateMAD(pLuma, uiWidth, uiHeight, stride);
+    isHomogeneous = (mad < m_textureThreshold);
+  }
+  
   rpcTempCU->setHomogeneous(isHomogeneous);
 
   // // 如果紋理均勻並且達到最大分割深度，則跳過分割流程
@@ -1025,10 +1028,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
     iMaxQP = iMinQP; // If all TUs are forced into using transquant bypass, do not loop here.
   }
 
-  const Bool bSubBranch = bBoundary || !isHomogeneous || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) );
-
-  if( bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary))
+  const Bool bSubBranch = bBoundary || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) );
+  // printf("before temp %d best %d isHomogeneous %d uiDepth %d\n", rpcTempCU->getPartitionSize(0), rpcBestCU->getPartitionSize(0), isHomogeneous, uiDepth);
+  if( bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && !isHomogeneous && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary))
   {
+    // printf("enter\n");
     // further split
     Double splitTotalCost = 0;
 
@@ -1203,6 +1207,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
   rpcBestCU->copyToPic(uiDepth);                                                     // Copy Best data to Picture for next partition prediction.
 
   xCopyYuv2Pic( rpcBestCU->getPic(), rpcBestCU->getCtuRsAddr(), rpcBestCU->getZorderIdxInCtu(), uiDepth, uiDepth );   // Copy Yuv data to picture Yuv
+  // printf("temp %d best %d\n", rpcTempCU->getPartitionSize(0), rpcBestCU->getPartitionSize(0));
   if (bBoundary)
   {
     return;
