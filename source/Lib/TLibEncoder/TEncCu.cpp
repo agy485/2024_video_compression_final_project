@@ -631,26 +631,16 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
   UInt stride = m_ppcOrigYuv[uiDepth]->getStride(COMPONENT_Y);
 
   TComYuv yuvInstance;
-  double mad = yuvInstance.calculateMAD(pLuma, uiWidth, uiHeight, stride);
 
-  // 判斷是否均勻
-  // m_textureThreshold = 10.0;
-  Bool isHomogeneous = (mad < m_textureThreshold); // 閾值可通過配置文件設定
+  Bool isHomogeneous = false;
+  if (uiDepth != 0) {
+    double mad = yuvInstance.calculateMAD(pLuma, uiWidth, uiHeight, stride);
+    isHomogeneous = (mad < m_textureThreshold);
+  }
+
   rpcTempCU->setHomogeneous(isHomogeneous);
   Bool isBSIP = false;
   Bool isCBFZero = false;
-
-  // // 如果紋理均勻並且達到最大分割深度，則跳過分割流程
-  // // printf("thre: %f : %f\n", m_textureThreshold, mad);
-  // if (mad < m_textureThreshold)
-  // {
-  //     // printf("%f\n",mad);
-  //     // rpcBestCU->copyPartFrom(rpcTempCU, 0, rpcTempCU->getDepth(0)); 
-  //     rpcBestCU->copyToPic(uiDepth);                                                     // Copy Best data to Picture for next partition prediction.
-  //     xCopyYuv2Pic( rpcBestCU->getPic(), rpcBestCU->getCtuRsAddr(), rpcBestCU->getZorderIdxInCtu(), uiDepth, uiDepth );   // Copy Yuv data to picture Yuv
-  //     return; // 提前結束
-  // }
-
 
   Int iBaseQP = xComputeQP( rpcBestCU, uiDepth );
   Int iMinQP;
