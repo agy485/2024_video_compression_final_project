@@ -234,7 +234,7 @@ Void TEncSearch::init(TEncCfg*       pcEncCfg,
   m_pcTrQuant                    = pcTrQuant;
   m_iSearchRange                 = iSearchRange;
   m_bipredSearchRange            = bipredSearchRange;
-  m_motionEstimationSearchMethod = motionEstimationSearchMethod;
+  m_motionEstimationSearchMethod = MESEARCH_FULL;
   m_pcEntropyCoder               = pcEntropyCoder;
   m_pcRdCost                     = pcRdCost;
 
@@ -3976,6 +3976,9 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   m_iSearchRange = m_aaiAdaptSR[eRefPicList][iRefIdxPred];
 
   Int           iSrchRng      = ( bBi ? m_bipredSearchRange : m_iSearchRange );
+  if (m_motionEstimationSearchMethod==MESEARCH_FULL){
+    iSrchRng = 8;
+  }
   TComPattern   cPattern;
 
   Double        fWeight       = 1.0;
@@ -4047,11 +4050,12 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
 
   setWpScalingDistParam( pcCU, iRefIdxPred, eRefPicList );
   //  Do integer search
-  if ( (m_motionEstimationSearchMethod==MESEARCH_FULL) || bBi )
-  {
-    xPatternSearch      ( &cPattern, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost );
-  }
-  else
+  //if ( (m_motionEstimationSearchMethod==MESEARCH_FULL) || bBi )
+  //{
+  //  printf("==============xPatternSearch========================");
+  //  xPatternSearch      ( &cPattern, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost );
+  //}
+  //else
   {
     rcMv = *pcMvPred;
     const TComMv *pIntegerMv2Nx2NPred=0;
@@ -4226,7 +4230,72 @@ Void TEncSearch::xPatternSearch( const TComPattern* const pcPatternKey,
   return;
 }
 
+Void TEncSearch::xPatternSearch2( const TComPattern* const pcPatternKey,
+                                 const Pel*               piRefY,
+                                 const Int                iRefStride,
+                                 const TComMv* const      pcMvSrchRngLT,
+                                 const TComMv* const      pcMvSrchRngRB,
+                                 TComMv&      rcMv,
+                                 Distortion&  ruiSAD )
+{
+  Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
+  Int   iSrchRngHorRight  = pcMvSrchRngRB->getHor();
+  Int   iSrchRngVerTop    = pcMvSrchRngLT->getVer();
+  Int   iSrchRngVerBottom = pcMvSrchRngRB->getVer();
+  //printf("iSrchRngHorLeft %d iSrchRngHorRight %d iSrchRngVerTop %d iSrchRngVerBottom %d\n",iSrchRngHorLeft,iSrchRngHorRight,iSrchRngVerTop,iSrchRngVerBottom);
+  Distortion  uiSad;
+  Distortion  uiSadBest = std::numeric_limits<Distortion>::max();
+  Int         iBestX = 0;
+  Int         iBestY = 0;
 
+  //-- jclee for using the SAD function pointer
+  m_pcRdCost->setDistParam( pcPatternKey, piRefY, iRefStride,  m_cDistParam );
+  //printf("entry xPatternSearch2\n");
+  // fast encoder decision: use subsampled SAD for integer ME
+  if ( m_pcEncCfg->getFastInterSearchMode()==FASTINTERSEARCH_MODE1 || m_pcEncCfg->getFastInterSearchMode()==FASTINTERSEARCH_MODE3 )
+  {
+    if ( m_cDistParam.iRows > 8 )
+    {
+      m_cDistParam.iSubShift = 1;
+    }
+  }
+
+  piRefY += (iSrchRngVerTop * iRefStride);
+  for ( Int y = iSrchRngVerTop; y <= iSrchRngVerBottom; y++ )
+  {
+    for ( Int x = iSrchRngHorLeft; x <= iSrchRngHorRight; x++ )
+    {
+      //  find min. distortion position
+      m_cDistParam.pCur = piRefY + x;
+
+      setDistParamComp(COMPONENT_Y);
+
+      m_cDistParam.bitDepth = pcPatternKey->getBitDepthY();
+      uiSad = m_cDistParam.DistFunc( &m_cDistParam );
+
+      // motion cost
+      uiSad += m_pcRdCost->getCostOfVectorWithPredictor( x, y );
+
+      if ( uiSad < uiSadBest )
+      {
+        uiSadBest = uiSad;
+        iBestX    = x;
+        iBestY    = y;
+        m_cDistParam.m_maximumDistortionForEarlyExit = uiSad;
+      }
+      if ( uiSad >= uiSadBest )
+      {
+        break;
+      }
+    }
+    piRefY += iRefStride;
+  }
+
+  rcMv.set( iBestX, iBestY );
+
+  ruiSAD = uiSadBest - m_pcRdCost->getCostOfVectorWithPredictor( iBestX, iBestY );
+  return;
+}
 Void TEncSearch::xPatternSearchFast( const TComDataCU* const  pcCU,
                                      const TComPattern* const pcPatternKey,
                                      const Pel* const         piRefY,
@@ -4243,7 +4312,7 @@ Void TEncSearch::xPatternSearchFast( const TComDataCU* const  pcCU,
   pcCU->getMvPredAbove      ( m_acMvPredictors[MD_ABOVE] );
   assert (MD_ABOVE_RIGHT < NUM_MV_PREDICTORS);
   pcCU->getMvPredAboveRight ( m_acMvPredictors[MD_ABOVE_RIGHT] );
-
+  //printf("==========m_motionEstimationSearchMethod = %d=================",m_motionEstimationSearchMethod);
   switch ( m_motionEstimationSearchMethod )
   {
     case MESEARCH_DIAMOND:
@@ -4282,6 +4351,7 @@ Void TEncSearch::xPatternSearchFast( const TComDataCU* const  pcCU,
       break;
 
     case MESEARCH_FULL: // shouldn't get here.
+      xPatternSearch2      ( pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD );
     default:
       break;
   }
@@ -4396,6 +4466,7 @@ Void TEncSearch::xTZSearch( const TComDataCU* const pcCU,
     TComMv cMvSrchRngLT;
     TComMv cMvSrchRngRB;
     Int iSrchRng = m_iSearchRange;
+    //Int iSrchRng = 8;
     TComMv currBestMv(cStruct.iBestX, cStruct.iBestY );
     currBestMv <<= 2;
 #if MCTS_ENC_CHECK
