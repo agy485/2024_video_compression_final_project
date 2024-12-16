@@ -11,3 +11,9 @@ deploy
 *.pyc
 .vs/
 .vscode/
+F1.mp4
+F1.yuv
+compressed.h265
+compressedfull.h265
+output.mp4
+output.yuv
