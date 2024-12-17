@@ -440,6 +440,13 @@ protected:
                                     const TComMv* const      pcMvSrchRngRB,
                                     TComMv&      rcMv,
                                     Distortion&  ruiSAD );
+  Void xPatternSearch2             ( const TComPattern* const pcPatternKey,
+                                    const Pel*               piRefY,
+                                    const Int                iRefStride,
+                                    const TComMv* const      pcMvSrchRngLT,
+                                    const TComMv* const      pcMvSrchRngRB,
+                                    TComMv&      rcMv,
+                                    Distortion&  ruiSAD );
 
   Void xPatternSearchFracDIF      (
                                     Bool         bIsLosslessCoded,
