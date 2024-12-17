@@ -632,11 +632,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 
   TComYuv yuvInstance;
 
-  Bool isHomogeneous = false;
-  if (uiDepth != 0) {
-    double mad = yuvInstance.calculateMAD(pLuma, uiWidth, uiHeight, stride);
-    isHomogeneous = (mad < m_textureThreshold);
-  }
+  double mad = yuvInstance.calculateMAD(pLuma, uiWidth, uiHeight, stride);
+  Bool isHomogeneous = (mad < m_textureThreshold);
 
   rpcTempCU->setHomogeneous(isHomogeneous);
   Bool isBSIP = false;
@@ -1114,7 +1111,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 
   const Bool bSubBranch = bBoundary || !( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->getTotalCost()!=MAX_DOUBLE && rpcBestCU->isSkipped(0) );
 
-  if( bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && !isHomogeneous && !isCBFZero && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary))
+  if( ((bSubBranch && !isHomogeneous) || (bBoundary && isHomogeneous)) && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && !isCBFZero && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary))
   {
     // further split
     Double splitTotalCost = 0;
