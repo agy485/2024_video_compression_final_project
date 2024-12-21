@@ -35,12 +35,17 @@ ffmpeg -i input.mp4 -pix_fmt yuv420p -s 1920x1080 -r 30 output.yuv
 ffprobe -video_size 1920x1080 -pixel_format yuv420p -f rawvideo -i ~/Downloads/output.yuv
 ```
 
-## 7. Encode with HM
+## 7. Compile the HM Software
 ```bash
-./bin/TAppEncoderStatic -c cfg/encoder_randomaccess_main.cfg -i ~/Downloads/output.yuv -b compressed.h265 -wdt 1920 -hgt 1080 -fr 25 -f 9875
+cd bin && make -j$(nproc)
 ```
 
-## 8. Play the Encoded File
+## 8. Encode with HM
+```bash
+./bin/TAppEncoderStaticd -c cfg/encoder_randomaccess_main.cfg -i ~/Downloads/output.yuv -b compressed.h265 -wdt 1920 -hgt 1080 -fr 25 -f 9875
+```
+
+## 9. Play the Encoded File
 ```bash
 ffplay compressed.h265
 ```
