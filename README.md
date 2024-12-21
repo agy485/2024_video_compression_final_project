@@ -9,43 +9,35 @@ This project is a modified version of the open-source HM software.
 
 # HM Setup and Usage Instructions
 
-## 1. Clone the Repository
-```bash
-git clone https://vcgit.hhi.fraunhofer.de/jvet/HM.git
-```
-
-## 2. Install HM
-Follow the [repository](https://vcgit.hhi.fraunhofer.de/jvet/HM.git) instructions to install HM.
-
-## 3. Install FFmpeg
+## 1. Install FFmpeg
 Install FFmpeg on your system.
 
-## 4. Verify FFmpeg Installation
+## 2. Verify FFmpeg Installation
 ```bash
 ffmpeg -version
 ```
 
-## 5. Convert Video to `.yuv` Format
+## 3. Convert Video to `.yuv` Format
 ```bash
 ffmpeg -i input.mp4 -pix_fmt yuv420p -s 1920x1080 -r 30 output.yuv
 ```
 
-## 6. Check Frame Rate and Length
+## 4. Check Frame Rate and Length
 ```bash
 ffprobe -video_size 1920x1080 -pixel_format yuv420p -f rawvideo -i ~/Downloads/output.yuv
 ```
 
-## 7. Compile the HM Software
+## 5. Compile the HM Software
 ```bash
 cd bin && make -j$(nproc)
 ```
 
-## 8. Encode with HM
+## 6. Encode with HM
 ```bash
 ./bin/TAppEncoderStaticd -c cfg/encoder_randomaccess_main.cfg -i ~/Downloads/output.yuv -b compressed.h265 -wdt 1920 -hgt 1080 -fr 25 -f 9875
 ```
 
-## 9. Play the Encoded File
+## 7. Play the Encoded File
 ```bash
 ffplay compressed.h265
 ```
