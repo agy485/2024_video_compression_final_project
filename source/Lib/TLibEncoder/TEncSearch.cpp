@@ -4271,13 +4271,8 @@ Void TEncSearch::xPatternSearchFast( const TComDataCU* const  pcCU,
       xTZHexSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred, true, true );
       break;
 
-    case MESEARCH_HEXAGON_CROSS:
-      // throw std::runtime_error("test MESEARCH_HEXAGON_CROSS");
-      xTZHexSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred, false, false );
-      break;
-
-    case MESEARCH_DIAMOND_CROSS:
-      // throw std::runtime_error("test MESEARCH_DIAMOND_CROSS");
+    case MESEARCH_SQUARE:
+      // throw std::runtime_error("test MESEARCH_SQUARE");
       xTZSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred, false, false);
       break;
 
@@ -4308,7 +4303,7 @@ Void TEncSearch::xTZSearch( const TComDataCU* const pcCU,
   const Bool bFirstSearchDiamond                     = isDiamondSearch; //true;  // 1 = xTZ8PointDiamondSearch   0 = xTZ8PointSquareSearch
   const Bool bFirstCornersForDiamondDist1            = bExtendedSettings;
   const Bool bFirstSearchStop                        = m_pcEncCfg->getFastMEAssumingSmootherMVEnabled();
-  const UInt uiFirstSearchRounds                     = 3;     // first search stop X rounds after best match (must be >=1)
+  const UInt uiFirstSearchRounds                     = 5;     // first search stop X rounds after best match (must be >=1)
   const Bool bEnableRasterSearch                     = true;
   const Bool bAlwaysRasterSearch                     = bExtendedSettings;  // true: BETTER but factor 2 slower
   const Bool bRasterRefinementEnable                 = false; // enable either raster refinement or star refinement
@@ -4629,7 +4624,7 @@ Void TEncSearch::xTZHexSearch( const TComDataCU* const pcCU,
   const Bool bStarRefinementHexagon                  = isHexagonSearch; //true;  // 1 = xTZHexagonSearch   0 = xTZ8PointSquareSearch
   const Bool bStarRefinementCornersForHexagonDist1   = bExtendedSettings;
   const Bool bStarRefinementStop                     = false;
-  const UInt uiStarRefinementRounds                  = 2;  // star refinement stop X rounds after best match (must be >=1)
+  const UInt uiStarRefinementRounds                  = 1;  // star refinement stop X rounds after best match (must be >=1)
   const Bool bNewZeroNeighbourhoodTest               = bExtendedSettings;
 
   UInt uiSearchRange = m_iSearchRange; // 8

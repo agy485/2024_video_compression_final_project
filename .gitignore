@@ -11,3 +11,4 @@ deploy
 *.pyc
 .vs/
 .vscode/
+exp/

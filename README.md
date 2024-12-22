@@ -147,8 +147,7 @@ FastSearch                    : 4
 #   MESEARCH_DIAMOND_ENHANCED  = 3,
 #   MESEARCH_HEXAGON           = 4,
 #   MESEARCH_HEXAGON_ENHANCED  = 5,
-#   MESEARCH_HEXAGON_CROSS     = 6,
-#   MESEARCH_DIAMOND_CROSS     = 7,
+#   MESEARCH_SQUARE            = 6
 # };
 ```
 If you encounter some warnings  in TAppEncCfg when compiling code, please ignore it.
