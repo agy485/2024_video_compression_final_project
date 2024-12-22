@@ -4340,13 +4340,8 @@ Void TEncSearch::xPatternSearchFast( const TComDataCU* const  pcCU,
       xTZHexSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred, true, true );
       break;
 
-    case MESEARCH_HEXAGON_CROSS:
-      // throw std::runtime_error("test MESEARCH_HEXAGON_CROSS");
-      xTZHexSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred, false, false );
-      break;
-
-    case MESEARCH_DIAMOND_CROSS:
-      // throw std::runtime_error("test MESEARCH_DIAMOND_CROSS");
+    case MESEARCH_SQUARE:
+      // throw std::runtime_error("test MESEARCH_SQUARE");
       xTZSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred, false, false);
       break;
 
